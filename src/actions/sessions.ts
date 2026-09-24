@@ -20,7 +20,20 @@ import { requireOwnedGame, requireOwnedSession } from '@/lib/authorization'
 import { idString, toEnvelopeDTO, toMediaAssetDTO, toQuestionDTO } from '@/lib/dto'
 import type { LiveSessionDTO, SessionEnvelopeDTO, SessionQuestionDTO, SessionTeamDTO } from '@/lib/types'
 
-export async function createSessionAndStart(gameId: string): Promise<never> {
+export interface StartSessionState {
+  message: string | null
+}
+
+export async function startSession(
+  _previousState: StartSessionState,
+  formData: FormData,
+): Promise<StartSessionState> {
+  const gameIdValue = formData.get('gameId')
+  if (typeof gameIdValue !== 'string' || !gameIdValue) {
+    return { message: 'Invalid game selection' }
+  }
+
+  const gameId = gameIdValue
   await connectDB()
   const user = await getAuthUser()
   const game = await requireOwnedGame(gameId, user.id)
@@ -30,10 +43,10 @@ export async function createSessionAndStart(gameId: string): Promise<never> {
     Envelope.find({ gameId }).sort({ displayOrder: 1 }).lean(),
   ])
 
-  if (teams.length === 0) throw new Error('Add at least one team before starting')
-  if (questions.length === 0) throw new Error('Add at least one question before starting')
+  if (teams.length === 0) return { message: 'Add at least one team before starting' }
+  if (questions.length === 0) return { message: 'Add at least one question before starting' }
   if (game.gameType === 'ENVELOPE_GRID' && envelopes.length === 0) {
-    throw new Error('Add at least one envelope before starting')
+    return { message: 'Add at least one envelope before starting' }
   }
 
   const existingSession = await GameSession.findOne({ gameId, status: { $in: ['LIVE', 'PAUSED'] } })
