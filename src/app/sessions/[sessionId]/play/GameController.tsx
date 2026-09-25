@@ -12,6 +12,8 @@ import {
   selectRandomEligibleTeam,
 } from '@/lib/game-engine/core'
 import { useSoundSettings } from '@/components/SoundProvider'
+import { AnswerFeedback } from '@/components/AnswerFeedback'
+import { Eye } from 'lucide-react'
 import type { LiveSessionDTO, QuestionDTO, ScoreMap, SessionAttemptDTO } from '@/lib/types'
 
 function QuestionTimer({ seconds }: { seconds: number }) {
@@ -49,6 +51,11 @@ export default function GameController({ session, scores, attempts }: {
   const currentTeam = teams.find((team) => team.teamId === session.currentTeamId)
   const attemptedTeamIds = new Set(attempts.map((attempt) => attempt.teamId))
   const hasCurrentTeamAttempted = currentTeam ? attemptedTeamIds.has(currentTeam.teamId) : false
+  const answerKey = `${currentQuestion?.id ?? 'none'}:${currentTeam?.teamId ?? 'none'}`
+  const [answerState, setAnswerState] = useState<{ key: string; selectedOptionId: string | null; feedback: 'correct' | 'wrong' | null; showManualAnswer: boolean }>({ key: '', selectedOptionId: null, feedback: null, showManualAnswer: false })
+  const selectedOptionId = answerState.key === answerKey ? answerState.selectedOptionId : null
+  const answerFeedback = answerState.key === answerKey ? answerState.feedback : null
+  const showManualAnswer = answerState.key === answerKey ? answerState.showManualAnswer : false
 
   async function run(action: () => Promise<void>) {
     setLoading(true)
@@ -70,6 +77,19 @@ export default function GameController({ session, scores, attempts }: {
   const handleWrong = () => currentQuestion && currentTeam && run(async () => {
     playSound('wrong')
     await markAnswerWrong(session.id, currentTeam.teamId, currentQuestion.id, crypto.randomUUID())
+  })
+
+  const handleOptionSelect = (option: QuestionDTO['options'][number]) => currentQuestion && currentTeam && !selectedOptionId && run(async () => {
+    const result = option.isCorrect ? 'correct' : 'wrong'
+    setAnswerState({ key: answerKey, selectedOptionId: option.id, feedback: result, showManualAnswer: false })
+    playSound(result)
+    await new Promise((resolve) => window.setTimeout(resolve, option.isCorrect ? 1100 : 700))
+    setAnswerState((current) => current.key === answerKey ? { ...current, feedback: null } : current)
+    if (option.isCorrect) {
+      await markAnswerCorrect(session.id, currentTeam.teamId, currentQuestion.id, crypto.randomUUID())
+    } else {
+      await markAnswerWrong(session.id, currentTeam.teamId, currentQuestion.id, crypto.randomUUID())
+    }
   })
 
   const handlePass = () => run(async () => {
@@ -120,7 +140,8 @@ export default function GameController({ session, scores, attempts }: {
           <h2 className="text-5xl font-extrabold">{currentTeam.teamName}</h2>
           {hasCurrentTeamAttempted && <span className="absolute right-4 top-4 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white">INCORRECT</span>}
         </div>
-        <div className="quizza-panel flex flex-1 flex-col items-center justify-center overflow-hidden p-8 text-center">
+        <div className="quizza-panel relative flex flex-1 flex-col items-center justify-center overflow-hidden p-8 text-center">
+          <AnswerFeedback result={answerFeedback} />
           {showWheel ? (
               <div key="wheel" className="animate-in fade-in zoom-in-95 flex flex-col items-center gap-6 duration-300">
                 <div className="h-32 w-32 animate-spin rounded-full border-8 border-primary border-t-transparent" />
@@ -135,23 +156,50 @@ export default function GameController({ session, scores, attempts }: {
                 <h3 className="mb-8 text-4xl font-medium">{currentQuestion.questionText}</h3>
                 {currentQuestion.answerType === 'MCQ' && (
                   <div className="mb-8 grid w-full max-w-2xl grid-cols-2 gap-3">
-                    {currentQuestion.options.map((option) => <div key={option.id} className="rounded-lg border bg-muted/40 p-4 text-left">{option.optionText}</div>)}
+                    {currentQuestion.options.map((option) => {
+                      const revealed = selectedOptionId !== null
+                      const selectedWrong = selectedOptionId === option.id && !option.isCorrect
+                      const revealedCorrect = revealed && option.isCorrect
+                      return (
+                        <button
+                          key={option.id}
+                          type="button"
+                          aria-label={`Answer ${option.optionText}`}
+                          disabled={loading || hasCurrentTeamAttempted || revealed}
+                          onClick={() => handleOptionSelect(option)}
+                          className={`group min-h-20 rounded-2xl border-2 p-4 text-left text-base font-bold transition-all disabled:cursor-default ${revealedCorrect ? 'border-emerald-500 bg-emerald-50 text-emerald-800 shadow-[0_8px_28px_rgba(16,185,129,.18)]' : selectedWrong ? 'border-red-500 bg-red-50 text-red-800' : revealed ? 'border-border bg-muted/30 opacity-45' : 'border-border bg-white hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg'}`}
+                        >
+                          <span className="mr-3 inline-grid h-8 w-8 place-items-center rounded-xl bg-muted text-xs font-black group-hover:bg-primary/10 group-hover:text-primary">{String.fromCharCode(65 + currentQuestion.options.indexOf(option))}</span>
+                          {option.optionText}
+                          {revealedCorrect && <span className="float-right text-emerald-600">✓</span>}
+                          {selectedWrong && <span className="float-right text-red-600">✕</span>}
+                        </button>
+                      )
+                    })}
                   </div>
                 )}
-                {currentQuestion.answerType === 'MANUAL' && currentQuestion.expectedAnswer && <p className="mb-8 rounded-lg bg-muted p-3 text-sm text-muted-foreground">Expected: {currentQuestion.expectedAnswer}</p>}
-                {!hasCurrentTeamAttempted ? (
+                {currentQuestion.answerType === 'MANUAL' && currentQuestion.expectedAnswer && (
+                  <div className="mb-8">
+                    {!showManualAnswer ? (
+                      <button type="button" onClick={() => { setAnswerState({ key: answerKey, selectedOptionId: null, feedback: null, showManualAnswer: true }); playSound('reveal') }} className="quizza-button-secondary"><Eye className="h-4 w-4" /> Reveal Answer</button>
+                    ) : (
+                      <div className="animate-in zoom-in-95 rounded-2xl border border-amber-200 bg-amber-50 px-6 py-4 text-left duration-300"><p className="text-xs font-black uppercase tracking-wider text-amber-700">Expected answer</p><p className="mt-1 text-lg font-black text-foreground">{currentQuestion.expectedAnswer}</p></div>
+                    )}
+                  </div>
+                )}
+                {!hasCurrentTeamAttempted && currentQuestion.answerType === 'MANUAL' ? (
                   <div className="flex gap-4">
                     <button onClick={handleCorrect} disabled={loading} className="rounded-2xl bg-green-600 px-10 py-5 text-xl font-bold text-white disabled:opacity-50">✓ CORRECT</button>
                     <button onClick={handleWrong} disabled={loading} className="rounded-2xl bg-red-600 px-10 py-5 text-xl font-bold text-white disabled:opacity-50">✕ WRONG</button>
                   </div>
-                ) : (
+                ) : hasCurrentTeamAttempted ? (
                   <div className="flex w-full max-w-md flex-col gap-3">
                     <p className="font-bold text-destructive">Answer incorrect. What next?</p>
                     <button onClick={handlePass} disabled={loading} className="rounded-xl bg-secondary py-4 font-bold">Pass to Next Team</button>
                     <button onClick={handleWheel} disabled={loading} className="rounded-xl bg-amber-500 py-4 font-bold text-white">Spin the Wheel</button>
                     <button onClick={handleClose} disabled={loading} className="rounded-xl border-2 py-4 font-bold text-muted-foreground">Close Question</button>
                   </div>
-                )}
+                ) : null}
                 {wheelWinner && <p className="mt-4 font-bold text-primary">Selected: {wheelWinner}</p>}
                 {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
               </div>

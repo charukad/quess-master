@@ -109,7 +109,7 @@ export async function updateQuestion(
   const question = await Question.findOneAndUpdate(
     { _id: questionId, gameId },
     { $set: setValues, $unset: unsetValues },
-    { new: true, runValidators: true },
+    { returnDocument: 'after', runValidators: true },
   ).lean()
   if (!question) throw new Error('Question not found')
 

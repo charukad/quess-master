@@ -41,7 +41,7 @@ export async function updateTeam(gameId: string, teamId: string, name: string): 
   const team = await Team.findOneAndUpdate(
     { _id: teamId, gameId },
     { name: validName },
-    { new: true },
+    { returnDocument: 'after' },
   ).lean()
   if (!team) throw new Error('Team not found')
   revalidatePath(`/games/${gameId}`)
