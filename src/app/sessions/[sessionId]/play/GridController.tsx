@@ -3,7 +3,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
 import { completeSessionEnvelope, openSessionEnvelope, unlockSessionEnvelope } from '@/actions/envelopes'
 import { closeQuestion, markAnswerCorrect, markAnswerWrong } from '@/lib/game-engine/core'
 import { useSoundSettings } from '@/components/SoundProvider'
@@ -12,7 +11,7 @@ import type { LiveSessionDTO, QuestionDTO, ScoreMap } from '@/lib/types'
 function EnvelopeQuestion({ question }: { question: QuestionDTO }) {
   return (
     <div className="flex w-full flex-col items-center">
-      {question.media?.resourceType === 'image' && <div className="relative mb-5 h-56 w-full max-w-xl"><Image src={question.media.secureUrl} alt="Question media" fill unoptimized className="object-contain" /></div>}
+      {question.media?.resourceType === 'image' && <div className="relative mb-5 h-56 w-full max-w-xl"><Image src={question.media.secureUrl} alt="Question media" fill sizes="(max-width: 768px) 100vw, 576px" className="object-contain" /></div>}
       {question.media?.resourceType === 'audio' && <audio src={question.media.secureUrl} controls className="mb-5 w-full max-w-xl" />}
       {question.media?.resourceType === 'video' && <video src={question.media.secureUrl} controls className="mb-5 max-h-72 w-full max-w-xl" />}
       <h4 className="mb-8 text-4xl font-bold text-primary">{question.questionText}</h4>
@@ -66,10 +65,9 @@ export default function GridController({ session, scores }: { session: LiveSessi
 
   return (
     <div className="grid flex-1 gap-8 md:grid-cols-[1fr_350px]">
-      <div className="rounded-2xl border bg-card p-8 shadow-sm">
-        <AnimatePresence mode="wait">
-          {openedEnvelope && activeQuestion ? (
-            <motion.div key={openedEnvelope.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.05 }} className="flex min-h-[560px] flex-col items-center justify-between text-center">
+      <div className="quizza-panel p-8">
+        {openedEnvelope && activeQuestion ? (
+            <div key={openedEnvelope.id} className="animate-in fade-in zoom-in-95 flex min-h-[560px] flex-col items-center justify-between text-center duration-300">
               <div className="w-full">
                 <p className="mb-4 text-sm font-medium uppercase tracking-widest text-primary">Envelope {openedEnvelope.envelope.envelopeNumber} · {openedEnvelope.envelope.title}</p>
                 <h3 className="mb-6 text-3xl font-medium">{openedEnvelope.envelope.message}</h3>
@@ -81,9 +79,9 @@ export default function GridController({ session, scores }: { session: LiveSessi
                 <button onClick={handleCorrect} disabled={loading} className="flex-1 rounded-2xl bg-green-600 py-5 text-xl font-bold text-white disabled:opacity-50">✓ CORRECT</button>
                 <button onClick={handleWrong} disabled={loading} className="flex-1 rounded-2xl bg-red-600 py-5 text-xl font-bold text-white disabled:opacity-50">✕ WRONG</button>
               </div>
-            </motion.div>
+            </div>
           ) : (
-            <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-[560px]">
+            <div key="grid" className="animate-in fade-in min-h-[560px] duration-300">
               <h3 className="mb-8 text-center text-2xl font-bold">Select an Envelope</h3>
               <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-5">
                 {envelopes.map((item) => (
@@ -98,12 +96,11 @@ export default function GridController({ session, scores }: { session: LiveSessi
                   </button>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
         {error && <p role="alert" className="mt-4 text-center text-sm text-destructive">{error}</p>}
       </div>
-      <aside className="sticky top-8 h-fit rounded-2xl border bg-card p-6 shadow-sm">
+      <aside className="quizza-panel sticky top-8 h-fit p-6">
         <h3 className="mb-4 border-b pb-4 text-xl font-bold">Live Scoreboard</h3>
         <div className="space-y-3">{teams.map((team) => <div key={team.teamId} className="flex justify-between rounded-xl bg-muted/40 p-4"><span>{team.teamName}</span><strong className="text-2xl">{scores[team.teamId] ?? 0}</strong></div>)}</div>
       </aside>

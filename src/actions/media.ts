@@ -33,7 +33,7 @@ export async function getUploadSignature() {
 
   cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret })
   const timestamp = Math.round(Date.now() / 1000)
-  const folder = 'quiz-master'
+  const folder = 'quizza'
   const signature = cloudinary.utils.api_sign_request(
     { folder, timestamp },
     apiSecret,

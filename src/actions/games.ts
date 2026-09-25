@@ -41,7 +41,10 @@ export async function createGame(formData: FormData): Promise<never> {
 export async function getGames(): Promise<GameDTO[]> {
   await connectDB()
   const user = await getAuthUser()
-  const games = await Game.find({ createdBy: user.id }).sort({ createdAt: -1 }).lean()
+  const games = await Game.find({ createdBy: user.id })
+    .select('name description gameType status teamCount settings createdAt updatedAt')
+    .sort({ createdAt: -1 })
+    .lean()
   return games.map(toGameDTO)
 }
 

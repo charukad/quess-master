@@ -3,7 +3,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
 import {
   closeQuestion,
   manualScoreAdjustment,
@@ -28,7 +27,7 @@ function QuestionTimer({ seconds }: { seconds: number }) {
 function QuestionMedia({ question }: { question: QuestionDTO }) {
   if (!question.media) return null
   if (question.media.resourceType === 'image') {
-    return <div className="relative mb-6 h-64 w-full max-w-2xl"><Image src={question.media.secureUrl} alt="Question media" fill unoptimized className="rounded-xl object-contain" /></div>
+    return <div className="relative mb-6 h-64 w-full max-w-2xl"><Image src={question.media.secureUrl} alt="Question media" fill sizes="(max-width: 768px) 100vw, 672px" className="rounded-xl object-contain" /></div>
   }
   if (question.media.resourceType === 'audio') return <audio src={question.media.secureUrl} controls className="mb-6 w-full max-w-xl" />
   if (question.media.resourceType === 'video') return <video src={question.media.secureUrl} controls className="mb-6 max-h-80 w-full max-w-2xl rounded-xl" />
@@ -116,20 +115,19 @@ export default function GameController({ session, scores, attempts }: {
   return (
     <div className="grid flex-1 gap-8 md:grid-cols-[1fr_350px]">
       <div className="flex flex-col gap-6">
-        <motion.div key={currentTeam.teamId} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="relative rounded-2xl border border-primary/20 bg-primary/10 p-8 text-center shadow-inner">
+        <div key={currentTeam.teamId} className="animate-in fade-in slide-in-from-top-2 relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-r from-[#fff6df] via-[#fff0f5] to-[#f5edf7] p-8 text-center duration-300">
           <p className="mb-2 text-sm font-medium uppercase tracking-widest text-primary">Current Team</p>
           <h2 className="text-5xl font-extrabold">{currentTeam.teamName}</h2>
           {hasCurrentTeamAttempted && <span className="absolute right-4 top-4 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white">INCORRECT</span>}
-        </motion.div>
-        <div className="flex flex-1 flex-col items-center justify-center overflow-hidden rounded-2xl border bg-card p-8 text-center shadow-sm">
-          <AnimatePresence mode="wait">
-            {showWheel ? (
-              <motion.div key="wheel" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-6">
+        </div>
+        <div className="quizza-panel flex flex-1 flex-col items-center justify-center overflow-hidden p-8 text-center">
+          {showWheel ? (
+              <div key="wheel" className="animate-in fade-in zoom-in-95 flex flex-col items-center gap-6 duration-300">
                 <div className="h-32 w-32 animate-spin rounded-full border-8 border-primary border-t-transparent" />
                 <h3 className="text-2xl font-bold">Spinning the wheel…</h3>
-              </motion.div>
+              </div>
             ) : (
-              <motion.div key={currentQuestion.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex w-full flex-col items-center">
+              <div key={currentQuestion.id} className="animate-in fade-in slide-in-from-right-2 flex w-full flex-col items-center duration-300">
                 <p className="mb-4 text-sm font-medium uppercase tracking-widest text-muted-foreground">
                   Question {session.currentQuestionPosition} · {currentQuestion.points} points · <QuestionTimer seconds={currentQuestion.timeLimitSeconds} />
                 </p>
@@ -156,12 +154,11 @@ export default function GameController({ session, scores, attempts }: {
                 )}
                 {wheelWinner && <p className="mt-4 font-bold text-primary">Selected: {wheelWinner}</p>}
                 {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
         </div>
       </div>
-      <aside className="sticky top-8 h-fit rounded-2xl border bg-card p-6 shadow-sm">
+      <aside className="quizza-panel sticky top-8 h-fit p-6">
         <h3 className="mb-4 border-b pb-4 text-xl font-bold">Live Scoreboard</h3>
         <div className="space-y-3">
           {teams.map((team) => (

@@ -1,6 +1,6 @@
-# Quiz Master
+# QUIZZA
 
-Quiz Master is a Next.js application for building and running live team quiz games. It supports standard turn-based games and team envelope grids, multiple-choice and manually judged questions, Cloudinary media, live scoring, passing, wheel selection, results, and event history.
+QUIZZA is a Next.js application for building and running live team quiz games. It supports standard turn-based games and team envelope grids, multiple-choice and manually judged questions, Cloudinary media, live scoring, passing, wheel selection, results, and event history.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fcharukad%2Fquess-master&env=MONGODB_URI%2CNEXTAUTH_SECRET%2CNEXT_PUBLIC_CLOUDINARY_CLOUD_NAME%2CCLOUDINARY_API_KEY%2CCLOUDINARY_API_SECRET&project-name=quess-master&repository-name=quess-master)
 
@@ -10,7 +10,7 @@ Quiz Master is a Next.js application for building and running live team quiz gam
 - MongoDB Atlas with Mongoose
 - NextAuth credential sessions
 - Cloudinary media storage
-- Tailwind CSS and Framer Motion
+- Tailwind CSS with lightweight CSS transitions
 
 ## Local setup
 

@@ -4,28 +4,32 @@ import GameController from './GameController'
 import GridController from './GridController'
 import { redirect } from 'next/navigation'
 import { SoundToggle } from '@/components/SoundToggle'
+import { QuizzaLogo } from '@/components/QuizzaLogo'
+import { Square } from 'lucide-react'
 
 export default async function LiveSessionPage(props: { params: Promise<{ sessionId: string }> }) {
   const params = await props.params;
-  const session = await getLiveSession(params.sessionId)
-  const scores = await getSessionScores(params.sessionId)
+  const [session, scores] = await Promise.all([
+    getLiveSession(params.sessionId),
+    getSessionScores(params.sessionId),
+  ])
   const attempts = session.currentQuestionId
     ? await getQuestionAttempts(session.id, session.currentQuestionId)
     : []
 
   return (
-    <main className="p-4 md:p-8 max-w-7xl mx-auto min-h-screen flex flex-col">
-      <div className="flex justify-between items-center border-b pb-4 mb-8">
-        <h1 className="text-2xl font-bold uppercase tracking-wider">{session.game.name}</h1>
-        <div className="flex items-center gap-6 text-sm font-medium">
-          <span className="bg-primary/20 text-primary px-4 py-1.5 rounded-full">{session.status}</span>
+    <main className="mx-auto flex min-h-screen max-w-7xl flex-col p-4 md:p-8">
+      <div className="mb-8 flex flex-col justify-between gap-4 border-b pb-5 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-4"><QuizzaLogo compact /><span className="h-7 w-px bg-border" /><div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-primary">Live game</p><h1 className="text-xl font-black tracking-tight sm:text-2xl">{session.game.name}</h1></div></div>
+        <div className="flex flex-wrap items-center gap-3 text-sm font-medium">
+          <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-2 text-xs font-black text-primary"><span className="h-2 w-2 animate-pulse rounded-full bg-primary" />{session.status}</span>
           <SoundToggle />
           <form action={async () => {
             'use server'
             await endSession(session.id)
             redirect(`/sessions/${session.id}/results`)
           }}>
-            <button type="submit" className="font-bold text-muted-foreground hover:text-foreground">End Game</button>
+            <button type="submit" className="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-2 text-xs font-bold text-muted-foreground hover:border-destructive/30 hover:text-destructive"><Square className="h-3.5 w-3.5 fill-current" /> End game</button>
           </form>
         </div>
       </div>

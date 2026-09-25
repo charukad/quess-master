@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createEnvelope } from '@/actions/envelopes'
 import type { EnvelopeDTO, QuestionDTO, TeamDTO } from '@/lib/types'
+import { MailOpen, Plus } from 'lucide-react'
 
 export default function EnvelopeEditor({
   initialEnvelopes,
@@ -52,8 +53,9 @@ export default function EnvelopeEditor({
         <h3 className="text-lg font-semibold">Configured Envelopes</h3>
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
           {envelopes.map((envelope) => (
-            <div key={envelope.id} className="flex flex-col gap-2 rounded-xl border bg-card p-4 text-center">
-              <span className="text-2xl font-bold text-primary">{envelope.envelopeNumber}</span>
+            <div key={envelope.id} className="quizza-panel flex flex-col items-center gap-2 p-4 text-center">
+              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/10 text-primary"><MailOpen className="h-5 w-5" /></span>
+              <span className="text-2xl font-black text-primary">{envelope.envelopeNumber}</span>
               <span className="truncate text-xs font-medium uppercase">{envelope.teamName}</span>
               <span className="truncate text-xs text-muted-foreground" title={envelope.title}>{envelope.title || 'Untitled'}</span>
             </div>
@@ -61,8 +63,8 @@ export default function EnvelopeEditor({
           {envelopes.length === 0 && <div className="col-span-full rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">No envelopes created.</div>}
         </div>
       </div>
-      <div className="sticky top-20 h-fit rounded-xl border bg-card p-6">
-        <h3 className="mb-4 text-lg font-bold">Add Envelope</h3>
+      <div className="quizza-panel sticky top-24 h-fit p-6">
+        <h3 className="mb-4 text-lg font-black">Add envelope</h3>
         {!canCreate ? <p className="text-sm text-muted-foreground">Add teams and unassigned questions before creating envelopes.</p> : (
           <form onSubmit={handleAdd} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -88,8 +90,8 @@ export default function EnvelopeEditor({
             <label className="block space-y-2 text-sm font-medium">Reveal Message
               <textarea value={message} onChange={(event) => setMessage(event.target.value)} required maxLength={1000} className="min-h-20 w-full rounded-md border bg-background px-3 py-2" />
             </label>
-            <button disabled={loading} type="submit" className="h-10 w-full rounded-md bg-primary text-sm font-medium text-primary-foreground disabled:opacity-50">
-              {loading ? 'Saving…' : 'Add Envelope'}
+            <button disabled={loading} type="submit" className="quizza-button w-full">
+              {!loading && <Plus className="h-4 w-4" />}{loading ? 'Saving…' : 'Add Envelope'}
             </button>
             {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
           </form>

@@ -40,6 +40,8 @@ const GameSchema = new Schema<IGame>({
   settings: { type: Schema.Types.Mixed, default: {} },
 }, { timestamps: true })
 
+GameSchema.index({ createdBy: 1, createdAt: -1 })
+
 export const Game: Model<IGame> = mongoose.models.Game || mongoose.model<IGame>('Game', GameSchema)
 
 // ─── Team ─────────────────────────────────────────────────────────
@@ -58,6 +60,8 @@ const TeamSchema = new Schema<ITeam>({
   displayOrder: { type: Number, required: true },
   metadata: { type: Schema.Types.Mixed, default: {} },
 }, { timestamps: true })
+
+TeamSchema.index({ gameId: 1, displayOrder: 1 })
 
 export const Team: Model<ITeam> = mongoose.models.Team || mongoose.model<ITeam>('Team', TeamSchema)
 
@@ -88,6 +92,8 @@ const MediaAssetSchema = new Schema<IMediaAsset>({
   duration: { type: Number },
   metadata: { type: Schema.Types.Mixed, default: {} },
 }, { timestamps: true })
+
+MediaAssetSchema.index({ createdBy: 1, createdAt: -1 })
 
 export const MediaAsset: Model<IMediaAsset> = mongoose.models.MediaAsset || mongoose.model<IMediaAsset>('MediaAsset', MediaAssetSchema)
 
@@ -133,6 +139,8 @@ const QuestionSchema = new Schema<IQuestion>({
   options: [QuestionOptionSchema],
   settings: { type: Schema.Types.Mixed, default: {} },
 }, { timestamps: true })
+
+QuestionSchema.index({ gameId: 1, displayOrder: 1 })
 
 export const Question: Model<IQuestion> = mongoose.models.Question || mongoose.model<IQuestion>('Question', QuestionSchema)
 
@@ -206,6 +214,9 @@ const GameSessionSchema = new Schema<IGameSession>({
   completedAt: { type: Date },
 }, { timestamps: true })
 
+GameSessionSchema.index({ createdBy: 1, createdAt: -1 })
+GameSessionSchema.index({ gameId: 1, status: 1 })
+
 export const GameSession: Model<IGameSession> = mongoose.models.GameSession || mongoose.model<IGameSession>('GameSession', GameSessionSchema)
 
 // ─── Game Session Teams ───────────────────────────────────────────
@@ -223,6 +234,9 @@ const GameSessionTeamSchema = new Schema<IGameSessionTeam>({
   teamName: { type: String, required: true },
   displayOrder: { type: Number, required: true },
 }, { timestamps: true })
+
+GameSessionTeamSchema.index({ gameSessionId: 1, displayOrder: 1 })
+GameSessionTeamSchema.index({ gameSessionId: 1, teamId: 1 }, { unique: true })
 
 export const GameSessionTeam: Model<IGameSessionTeam> = mongoose.models.GameSessionTeam || mongoose.model<IGameSessionTeam>('GameSessionTeam', GameSessionTeamSchema)
 
@@ -246,6 +260,9 @@ const GameSessionQuestionSchema = new Schema<IGameSessionQuestion>({
   timeLimitSeconds: { type: Number, required: true },
   status: { type: String, default: 'PENDING' },
 }, { timestamps: true })
+
+GameSessionQuestionSchema.index({ gameSessionId: 1, displayOrder: 1 })
+GameSessionQuestionSchema.index({ gameSessionId: 1, questionId: 1 }, { unique: true })
 
 export const GameSessionQuestion: Model<IGameSessionQuestion> = mongoose.models.GameSessionQuestion || mongoose.model<IGameSessionQuestion>('GameSessionQuestion', GameSessionQuestionSchema)
 
@@ -275,6 +292,9 @@ const QuestionAttemptSchema = new Schema<IQuestionAttempt>({
   answeredAt: { type: Date },
 }, { timestamps: true })
 
+QuestionAttemptSchema.index({ gameSessionId: 1, questionId: 1, createdAt: 1 })
+QuestionAttemptSchema.index({ gameSessionId: 1, questionId: 1, teamId: 1 })
+
 export const QuestionAttempt: Model<IQuestionAttempt> = mongoose.models.QuestionAttempt || mongoose.model<IQuestionAttempt>('QuestionAttempt', QuestionAttemptSchema)
 
 // ─── Score Transaction ────────────────────────────────────────────
@@ -301,6 +321,8 @@ const ScoreTransactionSchema = new Schema<IScoreTransaction>({
   createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true })
 
+ScoreTransactionSchema.index({ gameSessionId: 1, createdAt: 1 })
+
 export const ScoreTransaction: Model<IScoreTransaction> = mongoose.models.ScoreTransaction || mongoose.model<IScoreTransaction>('ScoreTransaction', ScoreTransactionSchema)
 
 // ─── Game Event ───────────────────────────────────────────────────
@@ -325,6 +347,8 @@ const GameEventSchema = new Schema<IGameEvent>({
   createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true })
 
+GameEventSchema.index({ gameSessionId: 1, createdAt: -1 })
+
 export const GameEvent: Model<IGameEvent> = mongoose.models.GameEvent || mongoose.model<IGameEvent>('GameEvent', GameEventSchema)
 
 // ─── Session Envelope ─────────────────────────────────────────────
@@ -345,5 +369,8 @@ const SessionEnvelopeSchema = new Schema<ISessionEnvelope>({
   openedAt: { type: Date },
   completedAt: { type: Date },
 }, { timestamps: true })
+
+SessionEnvelopeSchema.index({ gameSessionId: 1, envelopeId: 1 }, { unique: true })
+SessionEnvelopeSchema.index({ gameSessionId: 1, status: 1 })
 
 export const SessionEnvelope: Model<ISessionEnvelope> = mongoose.models.SessionEnvelope || mongoose.model<ISessionEnvelope>('SessionEnvelope', SessionEnvelopeSchema)

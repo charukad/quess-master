@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createTeam, updateTeamOrder } from '@/actions/teams'
 import type { TeamDTO } from '@/lib/types'
+import { ArrowDown, ArrowUp, Plus, UsersRound } from 'lucide-react'
 
 export default function TeamsList({ initialTeams, gameId }: { initialTeams: TeamDTO[]; gameId: string }) {
   const [teams, setTeams] = useState(initialTeams)
@@ -41,27 +42,27 @@ export default function TeamsList({ initialTeams, gameId }: { initialTeams: Team
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border bg-card p-4">
+      <div className="quizza-panel p-5">
         {teams.length === 0 ? (
           <p className="text-sm text-muted-foreground">No teams added yet.</p>
         ) : (
           <ul className="space-y-2">
             {teams.map((team, index) => (
-              <li key={team.id} className="flex items-center justify-between rounded-md border bg-background p-3">
-                <span className="font-medium">{index + 1}. {team.name}</span>
+              <li key={team.id} className="flex items-center justify-between rounded-2xl border bg-white p-3.5">
+                <span className="flex items-center gap-3 font-bold"><span className="grid h-9 w-9 place-items-center rounded-xl bg-[#f5edf7] text-[#7b2677]"><UsersRound className="h-4 w-4" /></span>{index + 1}. {team.name}</span>
                 <span className="flex gap-1">
-                  <button type="button" disabled={index === 0 || loading} onClick={() => moveTeam(index, -1)} aria-label={`Move ${team.name} up`} className="rounded border px-2 py-1 disabled:opacity-30">↑</button>
-                  <button type="button" disabled={index === teams.length - 1 || loading} onClick={() => moveTeam(index, 1)} aria-label={`Move ${team.name} down`} className="rounded border px-2 py-1 disabled:opacity-30">↓</button>
+                  <button type="button" disabled={index === 0 || loading} onClick={() => moveTeam(index, -1)} aria-label={`Move ${team.name} up`} className="grid h-8 w-8 place-items-center rounded-lg border bg-white text-muted-foreground hover:text-primary disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button>
+                  <button type="button" disabled={index === teams.length - 1 || loading} onClick={() => moveTeam(index, 1)} aria-label={`Move ${team.name} down`} className="grid h-8 w-8 place-items-center rounded-lg border bg-white text-muted-foreground hover:text-primary disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button>
                 </span>
               </li>
             ))}
           </ul>
         )}
       </div>
-      <form onSubmit={handleAdd} className="flex gap-2">
-        <input type="text" value={name} onChange={(event) => setName(event.target.value)} placeholder="New team name..." required maxLength={60} className="h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm" />
-        <button disabled={loading} type="submit" className="h-10 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
-          {loading ? 'Saving…' : 'Add Team'}
+      <form onSubmit={handleAdd} className="quizza-panel flex gap-2 p-4">
+        <input type="text" value={name} onChange={(event) => setName(event.target.value)} placeholder="New team name..." required maxLength={60} className="h-11 flex-1 rounded-xl border border-input bg-white px-4 py-2 text-sm" />
+        <button disabled={loading} type="submit" className="quizza-button h-11">
+          {!loading && <Plus className="h-4 w-4" />}{loading ? 'Saving…' : 'Add Team'}
         </button>
       </form>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}

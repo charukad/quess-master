@@ -22,7 +22,6 @@
     "cloudinary": "^2.11.0",
     "clsx": "^2.1.1",
     "cn": "^0.4.0",
-    "framer-motion": "^13.4.3",
     "idb-keyval": "^6.3.0",
     "lucide-react": "^1.48.0",
     "mongoose": "^9.10.2",

@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { getUploadSignature, saveMediaAsset } from '@/actions/media'
+import { Upload } from 'lucide-react'
 
 interface CloudinaryUploadResponse {
   public_id?: string
@@ -72,8 +73,8 @@ export default function MediaUploader() {
   return (
     <div className="flex items-center gap-3">
       <input type="file" className="hidden" ref={fileInputRef} onChange={handleFileChange} accept="image/*,audio/*,video/*" />
-      <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">
-        {uploading ? 'Uploading…' : 'Upload Media'}
+      <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="quizza-button">
+        <Upload className="h-4 w-4" /> {uploading ? 'Uploading…' : 'Upload media'}
       </button>
       {error && <p role="alert" className="max-w-64 text-sm text-destructive">{error}</p>}
     </div>

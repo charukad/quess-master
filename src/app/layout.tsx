@@ -15,8 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Quiz Master",
-  description: "Interactive quiz game management platform",
+  title: {
+    default: "QUIZZA",
+    template: "%s · QUIZZA",
+  },
+  description: "Create, host, and energize live quiz experiences with QUIZZA.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { startSession, type StartSessionState } from '@/actions/sessions'
+import { Play } from 'lucide-react'
 
 const initialState: StartSessionState = { message: null }
 
@@ -19,9 +20,9 @@ export default function StartGameForm({ gameId, canStart }: { gameId: string; ca
       <button
         type="submit"
         disabled={!canStart || pending}
-        className="w-full h-12 text-lg font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+        className="quizza-button h-14 w-full text-base disabled:cursor-not-allowed"
       >
-        {pending ? 'Starting…' : '▶ Start Game Session'}
+        {!pending && <Play className="h-5 w-5 fill-current" />}{pending ? 'Starting…' : 'Start Game Session'}
       </button>
     </form>
   )

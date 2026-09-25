@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createQuestion, type CreateQuestionInput } from '@/actions/questions'
 import type { MediaAssetDTO, QuestionDTO } from '@/lib/types'
+import { CircleHelp, Plus } from 'lucide-react'
 
 interface EditableOption {
   optionText: string
@@ -73,12 +74,12 @@ export default function QuestionsList({
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <div className="space-y-4">
-        <div className="rounded-xl border bg-card p-4">
+        <div className="quizza-panel p-4">
           {questions.length === 0 ? <p className="text-sm text-muted-foreground">No questions added yet.</p> : (
             <ul className="space-y-4">
               {questions.map((question, index) => (
-                <li key={question.id} className="flex flex-col rounded-md border bg-background p-4">
-                  <span className="font-medium">{index + 1}. {question.questionText}</span>
+                <li key={question.id} className="flex flex-col rounded-2xl border bg-white p-4">
+                  <span className="flex items-start gap-3 font-bold"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><CircleHelp className="h-4 w-4" /></span><span>{index + 1}. {question.questionText}</span></span>
                   <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
                     <span className="rounded bg-muted px-2 py-1">{question.answerType}</span>
                     <span className="rounded bg-muted px-2 py-1">{question.points} pts</span>
@@ -92,8 +93,8 @@ export default function QuestionsList({
         </div>
       </div>
 
-      <div className="sticky top-20 h-fit rounded-xl border bg-card p-6">
-        <h3 className="mb-4 text-lg font-bold">Add Question</h3>
+      <div className="quizza-panel sticky top-24 h-fit p-6">
+        <h3 className="mb-4 text-lg font-black">Add question</h3>
         <form onSubmit={handleAdd} className="space-y-4">
           <label className="block space-y-2 text-sm font-medium">Question Text
             <textarea value={questionText} onChange={(event) => setQuestionText(event.target.value)} required maxLength={2000} className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
@@ -130,8 +131,8 @@ export default function QuestionsList({
               </label>
             )}
           </div>
-          <button disabled={loading} type="submit" className="h-10 w-full rounded-md bg-primary text-sm font-medium text-primary-foreground disabled:opacity-50">
-            {loading ? 'Saving…' : 'Add Question'}
+          <button disabled={loading} type="submit" className="quizza-button w-full">
+            {!loading && <Plus className="h-4 w-4" />}{loading ? 'Saving…' : 'Add Question'}
           </button>
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         </form>
