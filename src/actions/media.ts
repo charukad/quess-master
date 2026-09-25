@@ -9,12 +9,6 @@ import { getAuthUser } from '@/lib/auth'
 import { toMediaAssetDTO } from '@/lib/dto'
 import type { MediaAssetDTO } from '@/lib/types'
 
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-})
-
 const mediaPayloadSchema = z.object({
   publicId: z.string().min(1).max(500),
   secureUrl: z.url(),
@@ -30,13 +24,21 @@ export type MediaUploadPayload = z.infer<typeof mediaPayloadSchema>
 
 export async function getUploadSignature() {
   await getAuthUser()
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+  const apiKey = process.env.CLOUDINARY_API_KEY
+  const apiSecret = process.env.CLOUDINARY_API_SECRET
+  if (!cloudName || !apiKey || !apiSecret) {
+    throw new Error('Cloudinary is not configured')
+  }
+
+  cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret })
   const timestamp = Math.round(Date.now() / 1000)
   const folder = 'quiz-master'
   const signature = cloudinary.utils.api_sign_request(
     { folder, timestamp },
-    process.env.CLOUDINARY_API_SECRET!,
+    apiSecret,
   )
-  return { timestamp, signature, folder, apiKey: process.env.CLOUDINARY_API_KEY! }
+  return { timestamp, signature, folder, apiKey }
 }
 
 export async function saveMediaAsset(payload: MediaUploadPayload): Promise<MediaAssetDTO> {

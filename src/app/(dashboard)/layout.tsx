@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { LogoutButton } from '@/components/LogoutButton'
 
+export const dynamic = 'force-dynamic'
+
 export default function DashboardLayout({
   children,
 }: {

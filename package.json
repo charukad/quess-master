@@ -1,7 +1,10 @@
 {
-  "name": "qqqqqq",
+  "name": "quess-master",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "next dev -p 3006",
     "build": "next build",

@@ -1,7 +1,7 @@
-import dns from 'node:dns'
 import mongoose from 'mongoose'
 import { loadEnvConfig } from '@next/env'
 import { expect, test } from '@playwright/test'
+import { getMongoConnectionOptions, resolveMongoConnectionUri } from '@/lib/mongodb'
 
 loadEnvConfig(process.cwd())
 
@@ -44,10 +44,11 @@ async function addQuestion(page: import('@playwright/test').Page, text: string) 
 test.describe.configure({ mode: 'serial' })
 
 test.afterAll(async () => {
-  const servers = (process.env.MONGODB_DNS_SERVERS ?? '').split(',').filter(Boolean)
-  if (servers.length > 0) dns.setServers(servers)
   if (!process.env.MONGODB_URI) return
-  const connection = await mongoose.createConnection(process.env.MONGODB_URI).asPromise()
+  const connection = await mongoose.createConnection(
+    await resolveMongoConnectionUri(process.env.MONGODB_URI),
+    getMongoConnectionOptions(),
+  ).asPromise()
   try {
     const user = await connection.collection('users').findOne({ email: testEmail })
     if (!user) return
