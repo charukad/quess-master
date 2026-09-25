@@ -82,19 +82,33 @@ export default function GridController({ session, scores }: { session: LiveSessi
             </div>
           ) : (
             <div key="grid" className="animate-in fade-in min-h-[560px] duration-300">
-              <h3 className="mb-8 text-center text-2xl font-bold">Select an Envelope</h3>
-              <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-5">
-                {envelopes.map((item) => (
-                  <button
-                    key={item.id}
-                    disabled={loading || item.status === 'COMPLETED'}
-                    onClick={() => item.status === 'LOCKED' ? handleUnlock(item.envelopeId) : handleOpen(item.envelopeId)}
-                    className={`aspect-square rounded-2xl text-3xl font-bold shadow-sm transition-all disabled:cursor-not-allowed ${item.status === 'AVAILABLE' ? 'bg-primary text-primary-foreground hover:scale-105' : item.status === 'COMPLETED' ? 'border-2 border-dashed opacity-30' : 'bg-muted text-muted-foreground'}`}
-                  >
-                    {item.envelope.envelopeNumber}
-                    <span className="mt-1 block text-xs font-normal uppercase">{item.status === 'LOCKED' ? 'Unlock' : item.status === 'AVAILABLE' ? 'Open' : item.status}</span>
-                  </button>
-                ))}
+              <div className="mb-7 text-center"><p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Team envelope board</p><h3 className="mt-2 text-2xl font-black">Choose from a team window</h3><p className="mt-1 text-sm text-muted-foreground">Every section contains only the envelopes assigned to that team.</p></div>
+              <div className={`grid gap-5 ${teams.length > 1 ? 'lg:grid-cols-2' : ''}`}>
+                {teams.map((team, teamIndex) => {
+                  const teamEnvelopes = envelopes.filter((item) => item.envelope.teamId === team.teamId)
+                  return (
+                    <section key={team.teamId} className="overflow-hidden rounded-3xl border bg-[#fbf9fc]">
+                      <div className={`flex items-center justify-between gap-3 border-b px-5 py-4 ${teamIndex % 2 === 0 ? 'bg-gradient-to-r from-[#fff0f5] to-[#fff7df]' : 'bg-gradient-to-r from-[#f5edf7] to-[#fff0f5]'}`}>
+                        <div><p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Team {teamIndex + 1}</p><h4 className="mt-0.5 text-lg font-black">{team.teamName}</h4></div>
+                        <div className="text-right"><p className="text-2xl font-black text-primary">{scores[team.teamId] ?? 0}</p><p className="text-[10px] font-bold uppercase text-muted-foreground">points</p></div>
+                      </div>
+                      <div className="grid min-h-40 grid-cols-2 gap-3 p-4 sm:grid-cols-3">
+                        {teamEnvelopes.map((item) => (
+                          <button
+                            key={item.id}
+                            disabled={loading || item.status === 'COMPLETED'}
+                            onClick={() => item.status === 'LOCKED' ? handleUnlock(item.envelopeId) : handleOpen(item.envelopeId)}
+                            className={`aspect-square rounded-2xl text-3xl font-black shadow-sm transition-all disabled:cursor-not-allowed ${item.status === 'AVAILABLE' ? 'bg-primary text-primary-foreground hover:-translate-y-1 hover:shadow-lg' : item.status === 'COMPLETED' ? 'border-2 border-dashed bg-white opacity-35' : 'border bg-white text-muted-foreground hover:border-primary/25'}`}
+                          >
+                            {item.envelope.envelopeNumber}
+                            <span className="mt-1 block text-[10px] font-bold uppercase tracking-wider">{item.status === 'LOCKED' ? 'Unlock' : item.status === 'AVAILABLE' ? 'Open' : item.status}</span>
+                          </button>
+                        ))}
+                        {teamEnvelopes.length === 0 && <div className="col-span-full grid min-h-32 place-items-center rounded-2xl border border-dashed bg-white text-center text-xs text-muted-foreground">No envelopes assigned</div>}
+                      </div>
+                    </section>
+                  )
+                })}
               </div>
             </div>
           )}

@@ -23,6 +23,7 @@ async function createGame(page: import('@playwright/test').Page, name: string, t
   await page.getByLabel('Game Type').selectOption(type)
   await page.getByRole('button', { name: 'Create Game' }).click()
   await expect(page).toHaveURL(/\/games\/[a-f0-9]{24}$/)
+  return page.url()
 }
 
 async function addTeam(page: import('@playwright/test').Page, name: string) {
@@ -93,14 +94,23 @@ test('creates an account and completes a standard game', async ({ page }) => {
   await page.getByRole('button', { name: 'Create Account' }).click()
   await expect(page).toHaveURL(/\/games$/)
 
-  await createGame(page, 'Standard E2E Quiz', 'STANDARD')
+  const gameUrl = await createGame(page, 'Standard E2E Quiz', 'STANDARD')
   await addTeam(page, 'Red Team')
   await page.getByPlaceholder('New team name...').fill('Blue Team')
   await page.getByRole('button', { name: 'Add Team' }).click()
   await addQuestion(page, 'What is two plus two?')
+  await page.getByRole('button', { name: 'Edit question 1' }).click()
+  await page.getByLabel('Question Text').fill('What is three plus one?')
+  await page.getByPlaceholder('Option 1').fill('Four — edited')
+  await page.getByRole('button', { name: 'Save Changes' }).click()
+  await expect(page.getByText('What is three plus one?', { exact: false })).toBeVisible()
   await page.getByRole('link', { name: 'Play Game' }).click()
+  await page.getByLabel('Rename Red Team').fill('Crimson Team')
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await page.getByRole('button', { name: 'Move Crimson Team down' }).click()
   await page.getByRole('button', { name: 'Start Game Session' }).click()
-  await expect(page.getByText('What is two plus two?')).toBeVisible()
+  await expect(page.getByText('What is three plus one?')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Blue Team' })).toBeVisible()
   await page.getByRole('button', { name: '✓ CORRECT' }).click()
   await expect(page.getByRole('heading', { name: 'Game complete' })).toBeVisible()
   await page.getByRole('link', { name: 'View results' }).click()
@@ -109,6 +119,13 @@ test('creates an account and completes a standard game', async ({ page }) => {
   await page.getByRole('link', { name: 'View Event History' }).click()
   await expect(page.getByRole('heading', { name: 'Event History Ledger' })).toBeVisible()
   await expect(page.getByText('ANSWER_CORRECT')).toBeVisible()
+
+  await page.goto(`${gameUrl}/settings`)
+  await page.getByRole('button', { name: 'Delete game' }).click()
+  await page.getByLabel(/Type Standard E2E Quiz to confirm/).fill('Standard E2E Quiz')
+  await page.getByRole('button', { name: 'Delete permanently' }).click()
+  await expect(page).toHaveURL(/\/games$/)
+  await expect(page.getByText('Standard E2E Quiz', { exact: true })).toHaveCount(0)
 })
 
 test('completes an envelope-grid game', async ({ page }) => {
@@ -125,6 +142,8 @@ test('completes an envelope-grid game', async ({ page }) => {
   await expect(page.getByText('Green Team')).toBeVisible()
   await page.getByRole('link', { name: 'Play Game' }).click()
   await page.getByRole('button', { name: 'Start Game Session' }).click()
+  await expect(page.getByText('Team envelope board')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Green Team' })).toBeVisible()
   await page.getByRole('button', { name: /1 Unlock/ }).click()
   await page.getByRole('button', { name: /1 Open/ }).click()
   await expect(page.getByText('Geometry challenge')).toBeVisible()

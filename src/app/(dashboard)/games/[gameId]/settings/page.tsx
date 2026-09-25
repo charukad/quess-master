@@ -1,5 +1,6 @@
 import { getGameById, updateGame } from '@/actions/games'
 import { Save, Settings2 } from 'lucide-react'
+import DeleteGameButton from './DeleteGameButton'
 
 export default async function GameSettingsPage({ params }: { params: Promise<{ gameId: string }> }) {
   const { gameId } = await params
@@ -23,6 +24,11 @@ export default async function GameSettingsPage({ params }: { params: Promise<{ g
         </label>
         <div className="border-t pt-5"><button type="submit" className="quizza-button"><Save className="h-4 w-4" /> Save settings</button></div>
       </form>
+      <section className="quizza-panel border-destructive/10 p-6 sm:p-8">
+        <h2 className="font-black text-destructive">Danger zone</h2>
+        <p className="mb-5 mt-1 text-sm text-muted-foreground">Delete this game and all of its quiz data when you no longer need it.</p>
+        <DeleteGameButton gameId={gameId} gameName={game.name} />
+      </section>
     </div>
   )
 }

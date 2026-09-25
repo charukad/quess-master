@@ -4,7 +4,19 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { connectDB } from '@/lib/mongodb'
-import { Game, GameSession } from '@/lib/models'
+import {
+  Envelope,
+  Game,
+  GameEvent,
+  GameSession,
+  GameSessionQuestion,
+  GameSessionTeam,
+  Question,
+  QuestionAttempt,
+  ScoreTransaction,
+  SessionEnvelope,
+  Team,
+} from '@/lib/models'
 import { getAuthUser } from '@/lib/auth'
 import { requireOwnedGame } from '@/lib/authorization'
 import { toGameDTO } from '@/lib/dto'
@@ -75,7 +87,20 @@ export async function deleteGame(id: string): Promise<void> {
   await requireOwnedGame(id, user.id)
   const activeSession = await GameSession.exists({ gameId: id, status: { $in: ['LIVE', 'PAUSED'] } })
   if (activeSession) throw new Error('A live or paused game cannot be deleted')
-  await Game.deleteOne({ _id: id, createdBy: user.id })
+  const sessionIds = await GameSession.find({ gameId: id, createdBy: user.id }).distinct('_id')
+  await Promise.all([
+    SessionEnvelope.deleteMany({ gameSessionId: { $in: sessionIds } }),
+    GameEvent.deleteMany({ gameSessionId: { $in: sessionIds } }),
+    ScoreTransaction.deleteMany({ gameSessionId: { $in: sessionIds } }),
+    QuestionAttempt.deleteMany({ gameSessionId: { $in: sessionIds } }),
+    GameSessionQuestion.deleteMany({ gameSessionId: { $in: sessionIds } }),
+    GameSessionTeam.deleteMany({ gameSessionId: { $in: sessionIds } }),
+    GameSession.deleteMany({ _id: { $in: sessionIds }, createdBy: user.id }),
+    Envelope.deleteMany({ gameId: id }),
+    Question.deleteMany({ gameId: id }),
+    Team.deleteMany({ gameId: id }),
+    Game.deleteOne({ _id: id, createdBy: user.id }),
+  ])
   revalidatePath('/dashboard')
   revalidatePath('/games')
 }

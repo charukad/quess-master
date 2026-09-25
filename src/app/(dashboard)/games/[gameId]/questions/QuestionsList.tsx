@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { createQuestion, type CreateQuestionInput } from '@/actions/questions'
+import { useRef, useState } from 'react'
+import { createQuestion, updateQuestion, type CreateQuestionInput } from '@/actions/questions'
 import type { MediaAssetDTO, QuestionDTO } from '@/lib/types'
-import { CircleHelp, Plus } from 'lucide-react'
+import { CircleHelp, Pencil, Plus, Save, X } from 'lucide-react'
 
 interface EditableOption {
   optionText: string
@@ -16,6 +16,12 @@ const emptyOptions = (): EditableOption[] => [
   { optionText: '', isCorrect: false },
   { optionText: '', isCorrect: false },
 ]
+
+function questionOptions(question: QuestionDTO): EditableOption[] {
+  const options = question.options.map(({ optionText, isCorrect }) => ({ optionText, isCorrect }))
+  while (options.length < 4) options.push({ optionText: '', isCorrect: options.length === 0 })
+  return options
+}
 
 export default function QuestionsList({
   initialQuestions,
@@ -36,8 +42,34 @@ export default function QuestionsList({
   const [options, setOptions] = useState<EditableOption[]>(emptyOptions)
   const [expectedAnswer, setExpectedAnswer] = useState('')
   const [mediaAssetId, setMediaAssetId] = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const formRef = useRef<HTMLDivElement>(null)
 
-  async function handleAdd(event: React.FormEvent) {
+  function resetForm() {
+    setEditingId(null)
+    setQuestionText('')
+    setExpectedAnswer('')
+    setOptions(emptyOptions())
+    setMediaAssetId('')
+    setPoints(10)
+    setTime(30)
+    setAnswerType('MCQ')
+  }
+
+  function handleEdit(question: QuestionDTO) {
+    setEditingId(question.id)
+    setQuestionText(question.questionText)
+    setPoints(question.points)
+    setTime(question.timeLimitSeconds)
+    setAnswerType(question.answerType)
+    setOptions(questionOptions(question))
+    setExpectedAnswer(question.expectedAnswer)
+    setMediaAssetId(question.mediaAssetId ?? '')
+    setError('')
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
     setLoading(true)
     setError('')
@@ -51,12 +83,14 @@ export default function QuestionsList({
       options: answerType === 'MCQ' ? options.filter((option) => option.optionText.trim()) : [],
     }
     try {
-      const created = await createQuestion(gameId, payload)
-      setQuestions((current) => [...current, created])
-      setQuestionText('')
-      setExpectedAnswer('')
-      setOptions(emptyOptions())
-      setMediaAssetId('')
+      if (editingId) {
+        const updated = await updateQuestion(gameId, editingId, payload)
+        setQuestions((current) => current.map((question) => question.id === editingId ? updated : question))
+      } else {
+        const created = await createQuestion(gameId, payload)
+        setQuestions((current) => [...current, created])
+      }
+      resetForm()
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Unable to add question')
     } finally {
@@ -77,9 +111,17 @@ export default function QuestionsList({
         <div className="quizza-panel p-4">
           {questions.length === 0 ? <p className="text-sm text-muted-foreground">No questions added yet.</p> : (
             <ul className="space-y-4">
-              {questions.map((question, index) => (
+              {questions.map((question, index) => {
+                const answer = question.answerType === 'MCQ'
+                  ? question.options.find((option) => option.isCorrect)?.optionText
+                  : question.expectedAnswer
+                return (
                 <li key={question.id} className="flex flex-col rounded-2xl border bg-white p-4">
-                  <span className="flex items-start gap-3 font-bold"><span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><CircleHelp className="h-4 w-4" /></span><span>{index + 1}. {question.questionText}</span></span>
+                  <div className="flex items-start gap-3">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary"><CircleHelp className="h-4 w-4" /></span>
+                    <div className="min-w-0 flex-1"><p className="font-bold">{index + 1}. {question.questionText}</p>{answer && <p className="mt-1 truncate text-xs text-muted-foreground">Answer: <span className="font-semibold text-foreground">{answer}</span></p>}</div>
+                    <button type="button" onClick={() => handleEdit(question)} aria-label={`Edit question ${index + 1}`} className="inline-flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-bold text-muted-foreground transition hover:border-primary/30 hover:text-primary"><Pencil className="h-3.5 w-3.5" /> Edit</button>
+                  </div>
                   <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
                     <span className="rounded bg-muted px-2 py-1">{question.answerType}</span>
                     <span className="rounded bg-muted px-2 py-1">{question.points} pts</span>
@@ -87,15 +129,19 @@ export default function QuestionsList({
                     {question.mediaAssetId && <span className="rounded bg-primary/20 px-2 py-1 text-primary">Media attached</span>}
                   </div>
                 </li>
-              ))}
+                )
+              })}
             </ul>
           )}
         </div>
       </div>
 
-      <div className="quizza-panel sticky top-24 h-fit p-6">
-        <h3 className="mb-4 text-lg font-black">Add question</h3>
-        <form onSubmit={handleAdd} className="space-y-4">
+      <div ref={formRef} className="quizza-panel sticky top-24 h-fit scroll-mt-24 p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <div><p className="text-lg font-black">{editingId ? 'Edit question & answer' : 'Add question'}</p>{editingId && <p className="mt-1 text-xs text-muted-foreground">Changes update this quiz immediately.</p>}</div>
+          {editingId && <button type="button" onClick={resetForm} className="grid h-8 w-8 place-items-center rounded-lg border text-muted-foreground hover:text-foreground" aria-label="Cancel editing"><X className="h-4 w-4" /></button>}
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <label className="block space-y-2 text-sm font-medium">Question Text
             <textarea value={questionText} onChange={(event) => setQuestionText(event.target.value)} required maxLength={2000} className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
           </label>
@@ -132,7 +178,7 @@ export default function QuestionsList({
             )}
           </div>
           <button disabled={loading} type="submit" className="quizza-button w-full">
-            {!loading && <Plus className="h-4 w-4" />}{loading ? 'Saving…' : 'Add Question'}
+            {!loading && (editingId ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />)}{loading ? 'Saving…' : editingId ? 'Save Changes' : 'Add Question'}
           </button>
           {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         </form>

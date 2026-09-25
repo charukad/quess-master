@@ -4,7 +4,8 @@ import { getTeamsForGame } from '@/actions/teams'
 import { getQuestionsForGame } from '@/actions/questions'
 import { getEnvelopesForGame } from '@/actions/envelopes'
 import StartGameForm from './StartGameForm'
-import { Check, Circle, Play, UsersRound } from 'lucide-react'
+import SetupTeamsEditor from './SetupTeamsEditor'
+import { Check, Circle, Play } from 'lucide-react'
 
 export default async function GameSetupPage(props: { params: Promise<{ gameId: string }> }) {
   const params = await props.params
@@ -73,20 +74,7 @@ export default async function GameSetupPage(props: { params: Promise<{ gameId: s
           )}
         </div>
 
-        <div>
-          <h3 className="mb-3 flex items-center gap-2 text-lg font-black"><UsersRound className="h-5 w-5 text-primary" /> Team order</h3>
-          <ul className="space-y-2">
-            {teams.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No teams configured yet.</p>
-            ) : (
-              teams.map((t, i) => (
-                <li key={t.id} className="flex items-center gap-3 rounded-2xl border bg-white p-3 font-semibold">
-                  <span className="grid h-7 w-7 place-items-center rounded-lg bg-accent text-xs font-black text-accent-foreground">{i + 1}</span>{t.name}
-                </li>
-              ))
-            )}
-          </ul>
-        </div>
+        {teams.length === 0 ? <p className="text-sm text-muted-foreground">No teams configured yet.</p> : <SetupTeamsEditor gameId={params.gameId} initialTeams={teams} />}
 
         <StartGameForm gameId={params.gameId} canStart={canStart} />
       </div>

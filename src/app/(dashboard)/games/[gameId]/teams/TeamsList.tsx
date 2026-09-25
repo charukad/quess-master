@@ -1,15 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { createTeam, updateTeamOrder } from '@/actions/teams'
+import { createTeam, updateTeam, updateTeamOrder } from '@/actions/teams'
 import type { TeamDTO } from '@/lib/types'
-import { ArrowDown, ArrowUp, Plus, UsersRound } from 'lucide-react'
+import { ArrowDown, ArrowUp, Pencil, Plus, Save, UsersRound, X } from 'lucide-react'
 
 export default function TeamsList({ initialTeams, gameId }: { initialTeams: TeamDTO[]; gameId: string }) {
   const [teams, setTeams] = useState(initialTeams)
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [editingTeamId, setEditingTeamId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState('')
 
   async function handleAdd(event: React.FormEvent) {
     event.preventDefault()
@@ -40,6 +42,22 @@ export default function TeamsList({ initialTeams, gameId }: { initialTeams: Team
     }
   }
 
+  async function saveTeamName(event: React.FormEvent, teamId: string) {
+    event.preventDefault()
+    setLoading(true)
+    setError('')
+    try {
+      const updated = await updateTeam(gameId, teamId, editingName)
+      setTeams((current) => current.map((team) => team.id === teamId ? updated : team))
+      setEditingTeamId(null)
+      setEditingName('')
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Unable to rename team')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="quizza-panel p-5">
@@ -49,8 +67,17 @@ export default function TeamsList({ initialTeams, gameId }: { initialTeams: Team
           <ul className="space-y-2">
             {teams.map((team, index) => (
               <li key={team.id} className="flex items-center justify-between rounded-2xl border bg-white p-3.5">
-                <span className="flex items-center gap-3 font-bold"><span className="grid h-9 w-9 place-items-center rounded-xl bg-[#f5edf7] text-[#7b2677]"><UsersRound className="h-4 w-4" /></span>{index + 1}. {team.name}</span>
+                {editingTeamId === team.id ? (
+                  <form onSubmit={(event) => saveTeamName(event, team.id)} className="flex min-w-0 flex-1 items-center gap-2">
+                    <input aria-label={`Rename ${team.name}`} value={editingName} onChange={(event) => setEditingName(event.target.value)} required maxLength={60} autoFocus className="h-9 min-w-0 flex-1 rounded-lg border bg-white px-3 text-sm" />
+                    <button type="submit" disabled={loading} aria-label={`Save ${team.name}`} className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-white"><Save className="h-4 w-4" /></button>
+                    <button type="button" onClick={() => setEditingTeamId(null)} aria-label="Cancel rename" className="grid h-8 w-8 place-items-center rounded-lg border text-muted-foreground"><X className="h-4 w-4" /></button>
+                  </form>
+                ) : (
+                  <span className="flex min-w-0 items-center gap-3 font-bold"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#f5edf7] text-[#7b2677]"><UsersRound className="h-4 w-4" /></span><span className="truncate">{index + 1}. {team.name}</span></span>
+                )}
                 <span className="flex gap-1">
+                  {editingTeamId !== team.id && <button type="button" disabled={loading} onClick={() => { setEditingTeamId(team.id); setEditingName(team.name) }} aria-label={`Edit ${team.name}`} className="grid h-8 w-8 place-items-center rounded-lg border bg-white text-muted-foreground hover:text-primary disabled:opacity-30"><Pencil className="h-4 w-4" /></button>}
                   <button type="button" disabled={index === 0 || loading} onClick={() => moveTeam(index, -1)} aria-label={`Move ${team.name} up`} className="grid h-8 w-8 place-items-center rounded-lg border bg-white text-muted-foreground hover:text-primary disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button>
                   <button type="button" disabled={index === teams.length - 1 || loading} onClick={() => moveTeam(index, 1)} aria-label={`Move ${team.name} down`} className="grid h-8 w-8 place-items-center rounded-lg border bg-white text-muted-foreground hover:text-primary disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button>
                 </span>
