@@ -26,7 +26,7 @@ Add these for **Production**, **Preview**, and **Development** unless noted othe
 | `CLOUDINARY_API_KEY` | For media uploads | Cloudinary API key |
 | `CLOUDINARY_API_SECRET` | For media uploads | Cloudinary API secret |
 
-Do not add `MONGODB_DNS_SERVERS` on Vercel unless Atlas SRV resolution actually fails. Vercel supplies `VERCEL_URL`, which NextAuth uses automatically for generated Vercel domains.
+Do not create `NEXTAUTH_URL` with an empty value: either omit it for a generated Vercel domain or set it to the complete HTTPS custom domain. Do not add `MONGODB_DNS_SERVERS` on Vercel unless Atlas SRV resolution actually fails. Vercel supplies `VERCEL_URL`, which NextAuth uses automatically for generated Vercel domains.
 
 ## Verify the deployment
 
